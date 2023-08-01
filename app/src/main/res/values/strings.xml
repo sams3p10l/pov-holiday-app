@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Holidays</string>
+
+    <!--Status messages-->
+    <string name="status_ok">Success! Everything is A-OK.</string>
+    <string name="status_error_params">Something is wrong with your request parameters.</string>
+    <string name="status_error_unauthorized">Unauthorized request. Did you remember your API key?</string>
+    <string name="status_error_payment">Upgrade required or account is delinquent. Payment is required.</string>
+    <string name="status_error_insecure">Insecure request. HTTPS requests only.</string>
+    <string name="status_error_monthly_limit">Monthly rate limit exceeded.</string>
+    <string name="status_error_server">Something went wrong on our end and we\'ve been notified.</string>
 </resources>

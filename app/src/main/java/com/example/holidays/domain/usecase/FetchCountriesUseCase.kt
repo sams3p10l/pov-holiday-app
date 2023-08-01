@@ -1,20 +1,25 @@
 package com.example.holidays.domain.usecase
 
 import com.example.holidays.data.repository.HolidaysRepo
-import com.example.holidays.domain.model.AvailableCountries
+import com.example.holidays.domain.model.AvailableCountry
+import com.example.holidays.util.Status
 import javax.inject.Inject
 
-class FetchCountriesUseCase @Inject constructor(
+class FetchCountriesUseCaseImpl @Inject constructor(
     private val repo: HolidaysRepo
-) {
-    suspend fun execute(): Pair<Int, List<AvailableCountries>> {
+): FetchCountriesUseCase {
+    override suspend fun execute(): Pair<Status?, List<AvailableCountry>> {
         val response = repo.fetchCountries()
 
-        return response.status to response.countries.map {
-            AvailableCountries(
+        return Status.byStatusCode(response.status) to response.countries.map {
+            AvailableCountry(
                 it.name,
-                it.code
+                it.codes.alpha2
             )
         }
     }
+}
+
+fun interface FetchCountriesUseCase {
+    suspend fun execute(): Pair<Status?, List<AvailableCountry>>
 }

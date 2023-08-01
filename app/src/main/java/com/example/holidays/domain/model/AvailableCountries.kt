@@ -1,6 +1,6 @@
 package com.example.holidays.domain.model
 
-data class AvailableCountries(
+data class AvailableCountry(
     val name: String,
     val countryCode: String
 )

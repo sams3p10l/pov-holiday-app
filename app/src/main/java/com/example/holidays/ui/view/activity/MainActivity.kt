@@ -13,13 +13,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.holidays.domain.repository.HolidaysUseCaseRepo
 import com.example.holidays.ui.view.composables.Composables
 import com.example.holidays.ui.view.theme.HolidaysTheme
+import com.example.holidays.util.Screen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
@@ -53,41 +59,20 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             HolidaysTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Recycler(countriesData)
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = Screen.MainScreen.route) {
+                        composable(route = Screen.MainScreen.route) {
+                            Composables.MainScreen(navController, countriesData)
+                        }
+                        composable(route = Screen.OpsScreen.route) {
+                            Composables.OperationsScreen()
+                        }
+                    }
                 }
-            }
-        }
-    }
-
-    @Composable
-    fun Recycler(data: List<String>) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            items(data) { listData ->
-                Composables.CountryView(listData)
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RecyclerPreview() {
-    val list = listOf("PERA", "MIKA", "LAZA")
-    HolidaysTheme {
-        val modifier = Modifier
-            .fillMaxSize()
-
-        LazyColumn(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-            items(list) { listData ->
-                Composables.CountryView(listData)
             }
         }
     }

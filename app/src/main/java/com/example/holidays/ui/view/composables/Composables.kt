@@ -1,7 +1,7 @@
 package com.example.holidays.ui.view.composables
 
 import android.annotation.SuppressLint
-import android.widget.RadioGroup
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -32,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -63,6 +62,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.holidays.ui.view.theme.HolidaysTheme
 import com.example.holidays.ui.viewmodel.MainScreenViewModel
+import com.example.holidays.ui.viewmodel.OperationsScreenViewModel
 import com.example.holidays.util.Operations
 import com.example.holidays.util.Screen.MainScreen
 import com.example.holidays.util.Screen.OpsScreen
@@ -75,7 +75,10 @@ import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY2_CODE
 object Composables {
 
     @Composable
-    fun NavigationHost(mainViewModel: MainScreenViewModel) {
+    fun NavigationHost(
+        mainViewModel: MainScreenViewModel,
+        opsViewModel: OperationsScreenViewModel
+    ) {
         HolidaysTheme {
             Surface(
                 modifier = Modifier.fillMaxSize(),
@@ -107,6 +110,8 @@ object Composables {
                         )
                     ) { entry ->
                         OperationsScreen(
+                            navController,
+                            opsViewModel,
                             country1 = entry.arguments?.getString(ARG_COUNTRY1),
                             country2 = entry.arguments?.getString(ARG_COUNTRY2),
                             country1Code = entry.arguments?.getString(ARG_COUNTRY1_CODE),
@@ -176,28 +181,48 @@ object Composables {
 
     @Composable
     fun OperationsScreen(
+        navController: NavController,
+        viewModel: OperationsScreenViewModel,
         country1: String?,
         country2: String?,
         country1Code: String?,
         country2Code: String?
     ) {
+        /**
+         * Parameters are specified as nullable because NavBackStackEntry arguments bundle is nullable by default
+         * In reality, params are not-null, as specified in NavigationHost
+         * Because of that it's safe to use double bangs (!!)
+         */
+        LaunchedEffect(key1 = null) {
+            viewModel.fetchHolidays(country1Code!!, country2Code!!)
+        }
+
+        val holidaysState = viewModel.holidays.collectAsState()
+        val holidays = holidaysState.value
+
+        BackHandler(enabled = true) {
+            navController.popBackStack()
+            viewModel.resetHolidays()
+        }
         Column {
             Header(text = "$country1 & $country2's holidays")
-            OpsRadioGroup(country1, country2)
+            OpsRadioGroup(viewModel, country1, country2)
             Spacer(Modifier.height(20.dp))
-            Text(text = country1!!)
-            Text(text = country2!!)
-            Text(text = country1Code!!)
-            Text(text = country2Code!!)
+            LazyColumn {
+                items(holidays) {
+                    HolidayView(name = it.name, date = it.date.toString())
+                }
+            }
         }
     }
 
     @Composable
     fun OpsRadioGroup(
+        viewModel: OperationsScreenViewModel,
         country1: String?,
         country2: String?
     ) {
-        var selectedButton by remember { mutableStateOf<Operations>(Operations.None) }
+        var selectedButton by remember { mutableStateOf<Operations>(Operations.Common) }
 
         Column {
             RadioButtonOption(
@@ -205,18 +230,21 @@ object Composables {
                 selected = selectedButton == Operations.Common
             ) {
                 selectedButton = Operations.Common
+                viewModel.filter(selectedButton)
             }
             RadioButtonOption(
                 text = Operations.ExclusiveA.text + "$country1",
                 selected = selectedButton == Operations.ExclusiveA
             ) {
                 selectedButton = Operations.ExclusiveA
+                viewModel.filter(selectedButton)
             }
             RadioButtonOption(
                 text = Operations.ExclusiveB.text + "$country2",
                 selected = selectedButton == Operations.ExclusiveB
             ) {
                 selectedButton = Operations.ExclusiveB
+                viewModel.filter(selectedButton)
             }
         }
     }
@@ -236,6 +264,14 @@ object Composables {
                 modifier = Modifier.padding(end = 5.dp)
             )
             Text(text = text)
+        }
+    }
+
+    @Composable
+    fun HolidayView(name: String, date: String) {
+        Column {
+            Text(text = name, fontSize = 14.sp)
+            Text(text = date, fontSize = 10.sp)
         }
     }
 

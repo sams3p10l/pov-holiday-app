@@ -18,9 +18,11 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -46,12 +48,67 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.holidays.ui.view.theme.HolidaysTheme
 import com.example.holidays.ui.viewmodel.MainScreenViewModel
 import com.example.holidays.util.Screen
+import com.example.holidays.util.Screen.MainScreen
+import com.example.holidays.util.Screen.OpsScreen
+import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY1
+import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY1_CODE
+import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY2
+import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY2_CODE
 
 @OptIn(ExperimentalUnitApi::class)
 object Composables {
+
+    @Composable
+    fun NavigationHost(mainViewModel: MainScreenViewModel) {
+        HolidaysTheme {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                val navController = rememberNavController()
+                NavHost(
+                    navController = navController,
+                    startDestination = MainScreen.route
+                ) {
+                    composable(route = MainScreen.route) {
+                        MainScreen(navController, mainViewModel)
+                    }
+                    composable(
+                        route = OpsScreen.route + "/{$ARG_COUNTRY1}/{$ARG_COUNTRY2}/{$ARG_COUNTRY1_CODE}/{$ARG_COUNTRY2_CODE}",
+                        arguments = listOf(
+                            navArgument(ARG_COUNTRY1) {
+                                type = NavType.StringType
+                            },
+                            navArgument(ARG_COUNTRY2) {
+                                type = NavType.StringType
+                            },
+                            navArgument(ARG_COUNTRY1_CODE) {
+                                type = NavType.StringType
+                            },
+                            navArgument(ARG_COUNTRY2_CODE) {
+                                type = NavType.StringType
+                            }
+                        )
+                    ) { entry ->
+                        OperationsScreen(
+                            country1 = entry.arguments?.getString(ARG_COUNTRY1),
+                            country2 = entry.arguments?.getString(ARG_COUNTRY2),
+                            country1Code = entry.arguments?.getString(ARG_COUNTRY1_CODE),
+                            country2Code = entry.arguments?.getString(ARG_COUNTRY2_CODE)
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
@@ -60,11 +117,27 @@ object Composables {
         navController: NavController,
         viewModel: MainScreenViewModel
     ) {
+        val selectedCountries = remember { mutableStateListOf<String>() }
+
         Scaffold(
-            content = { Recycler(viewModel) },
+            content = { Recycler(viewModel, selectedCountries) },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { navController.navigate(Screen.OpsScreen.route) },
+                    onClick = {
+                        val firstCountryCode = viewModel.getCountryCode(selectedCountries[0])
+                        val secondCountryCode = viewModel.getCountryCode(selectedCountries[1])
+
+                        if (firstCountryCode != null && secondCountryCode != null) {
+                            navController.navigate(
+                                OpsScreen.withArgs(
+                                    selectedCountries[0],
+                                    selectedCountries[1],
+                                    firstCountryCode,
+                                    secondCountryCode
+                                )
+                            )
+                        }
+                    },
                     modifier = Modifier
                         .padding(end = 8.dp, bottom = 16.dp)
                         .height(50.dp)
@@ -81,22 +154,29 @@ object Composables {
     }
 
     @Composable
-    fun OperationsScreen() {
+    fun OperationsScreen(
+        country1: String?,
+        country2: String?,
+        country1Code: String?,
+        country2Code: String?
+    ) {
         Column {
             Row {
                 RadioButton(selected = true, onClick = { /*TODO*/ })
                 RadioButton(selected = false, onClick = { /*TODO*/ })
                 RadioButton(selected = false, onClick = { /*TODO*/ })
             }
-            Text(text = "Filler text")
+            Text(text = country1!!)
+            Text(text = country2!!)
+            Text(text = country1Code!!)
+            Text(text = country2Code!!)
         }
     }
 
     @Composable
-    fun Recycler(viewModel: MainScreenViewModel) {
+    fun Recycler(viewModel: MainScreenViewModel, selectedCountries: MutableList<String>) {
         val dataState = viewModel.countriesBindings.collectAsState()
         val data = dataState.value
-        val selectedCountries = remember { mutableStateListOf<String>() }
         val lazyListState = rememberLazyListState()
 
         Column {

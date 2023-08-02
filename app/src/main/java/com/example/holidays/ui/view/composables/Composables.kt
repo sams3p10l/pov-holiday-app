@@ -1,8 +1,11 @@
 package com.example.holidays.ui.view.composables
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,12 +27,13 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -55,7 +59,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.holidays.ui.view.theme.HolidaysTheme
 import com.example.holidays.ui.viewmodel.MainScreenViewModel
-import com.example.holidays.util.Screen
 import com.example.holidays.util.Screen.MainScreen
 import com.example.holidays.util.Screen.OpsScreen
 import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY1
@@ -118,35 +121,48 @@ object Composables {
         viewModel: MainScreenViewModel
     ) {
         val selectedCountries = remember { mutableStateListOf<String>() }
+        var isFabEnabled by remember { mutableStateOf(false) }
+
+        isFabEnabled = selectedCountries.size == 2
 
         Scaffold(
             content = { Recycler(viewModel, selectedCountries) },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        val firstCountryCode = viewModel.getCountryCode(selectedCountries[0])
-                        val secondCountryCode = viewModel.getCountryCode(selectedCountries[1])
-
-                        if (firstCountryCode != null && secondCountryCode != null) {
-                            navController.navigate(
-                                OpsScreen.withArgs(
-                                    selectedCountries[0],
-                                    selectedCountries[1],
-                                    firstCountryCode,
-                                    secondCountryCode
-                                )
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .padding(end = 8.dp, bottom = 16.dp)
-                        .height(50.dp)
-                ) {
-                    Text(
-                        text = "Next >",
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                AnimatedVisibility(
+                    visible = isFabEnabled,
+                    enter = slideInHorizontally(
+                        initialOffsetX = { fullWidth -> fullWidth }
+                    ),
+                    exit = slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> fullWidth }
                     )
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            val firstCountryCode = viewModel.getCountryCode(selectedCountries[0])
+                            val secondCountryCode = viewModel.getCountryCode(selectedCountries[1])
+
+                            if (firstCountryCode != null && secondCountryCode != null) {
+                                navController.navigate(
+                                    OpsScreen.withArgs(
+                                        selectedCountries[0],
+                                        selectedCountries[1],
+                                        firstCountryCode,
+                                        secondCountryCode
+                                    )
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(end = 8.dp, bottom = 16.dp)
+                            .height(50.dp)
+                    ) {
+                        Text(
+                            text = "Next >",
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
             },
             floatingActionButtonPosition = FabPosition.End

@@ -1,28 +1,32 @@
 package com.example.holidays.ui.view.composables
 
 import android.annotation.SuppressLint
+import android.widget.RadioGroup
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -59,6 +63,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.holidays.ui.view.theme.HolidaysTheme
 import com.example.holidays.ui.viewmodel.MainScreenViewModel
+import com.example.holidays.util.Operations
 import com.example.holidays.util.Screen.MainScreen
 import com.example.holidays.util.Screen.OpsScreen
 import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY1
@@ -177,15 +182,60 @@ object Composables {
         country2Code: String?
     ) {
         Column {
-            Row {
-                RadioButton(selected = true, onClick = { /*TODO*/ })
-                RadioButton(selected = false, onClick = { /*TODO*/ })
-                RadioButton(selected = false, onClick = { /*TODO*/ })
-            }
+            Header(text = "$country1 & $country2's holidays")
+            OpsRadioGroup(country1, country2)
+            Spacer(Modifier.height(20.dp))
             Text(text = country1!!)
             Text(text = country2!!)
             Text(text = country1Code!!)
             Text(text = country2Code!!)
+        }
+    }
+
+    @Composable
+    fun OpsRadioGroup(
+        country1: String?,
+        country2: String?
+    ) {
+        var selectedButton by remember { mutableStateOf<Operations>(Operations.None) }
+
+        Column {
+            RadioButtonOption(
+                text = Operations.Common.text,
+                selected = selectedButton == Operations.Common
+            ) {
+                selectedButton = Operations.Common
+            }
+            RadioButtonOption(
+                text = Operations.ExclusiveA.text + "$country1",
+                selected = selectedButton == Operations.ExclusiveA
+            ) {
+                selectedButton = Operations.ExclusiveA
+            }
+            RadioButtonOption(
+                text = Operations.ExclusiveB.text + "$country2",
+                selected = selectedButton == Operations.ExclusiveB
+            ) {
+                selectedButton = Operations.ExclusiveB
+            }
+        }
+    }
+
+    @Composable
+    fun RadioButtonOption(
+        text: String,
+        selected: Boolean,
+        onClick: () -> Unit
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+                modifier = Modifier.padding(end = 5.dp)
+            )
+            Text(text = text)
         }
     }
 
@@ -196,14 +246,11 @@ object Composables {
         val lazyListState = rememberLazyListState()
 
         Column {
-            Text(
-                text = "Please select a pair of countries",
-                fontSize = TextUnit(20f, TextUnitType.Sp),
-                color = Color.Black,
-                modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 25.dp)
-            )
+            Header(text = "Please select a pair of countries")
             LazyColumn(
                 horizontalAlignment = Alignment.CenterHorizontally,
+                contentPadding = PaddingValues(top = 15.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
                 state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
@@ -239,8 +286,21 @@ object Composables {
         )
     }
 
+    @Composable
+    fun Header(text: String) {
+        Column {
+            Text(
+                text = text,
+                fontSize = TextUnit(20f, TextUnitType.Sp),
+                color = Color.Black,
+                modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 10.dp)
+            )
+            Divider(thickness = 1.dp)
+        }
+    }
+
     /**
-     * https://stackoverflow.com/questions/66341823/jetpack-compose-scrollbars and modified
+     * https://stackoverflow.com/questions/66341823/jetpack-compose-scrollbars; modified
      */
     private fun Modifier.simpleVerticalScrollbar(
         state: LazyListState,

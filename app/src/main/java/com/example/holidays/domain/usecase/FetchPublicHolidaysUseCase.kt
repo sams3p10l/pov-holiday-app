@@ -21,7 +21,7 @@ class FetchPublicHolidaysUseCaseImpl @Inject constructor(
     }
 
     companion object {
-        private const val DEFAULT_YEAR = 2023
+        private const val DEFAULT_YEAR = 2022
         private const val DATE_FORMAT = "E, d MMM"
     }
 }

@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Holidays</string>
 
+    <string name="main_screen_header_text">Please select a pair of countries</string>
+    <string name="ops_screen_header_text">"%1$s &amp; %1$s holidays"</string>
+
     <!--Status messages-->
     <string name="status_ok">Success! Everything is A-OK.</string>
     <string name="status_error_params">Something is wrong with your request parameters.</string>

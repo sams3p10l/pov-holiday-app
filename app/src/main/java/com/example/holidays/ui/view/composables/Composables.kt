@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import com.example.holidays.ui.view.theme.PurpleGrey40
 import androidx.compose.ui.text.font.FontWeight
@@ -57,19 +58,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.ExperimentalUnitApi
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.holidays.R
 import com.example.holidays.ui.view.theme.HolidaysTheme
 import com.example.holidays.ui.viewmodel.MainScreenViewModel
 import com.example.holidays.ui.viewmodel.OperationsScreenViewModel
+import com.example.holidays.util.enums.FontSizes
 import com.example.holidays.util.enums.Operations
 import com.example.holidays.util.enums.Screen.MainScreen
 import com.example.holidays.util.enums.Screen.OpsScreen
@@ -79,8 +78,6 @@ import com.example.holidays.util.enums.Screen.OpsScreen.ARG_COUNTRY2
 import com.example.holidays.util.enums.Screen.OpsScreen.ARG_COUNTRY2_CODE
 import kotlinx.coroutines.launch
 
-
-@OptIn(ExperimentalUnitApi::class)
 object Composables {
 
     @Composable
@@ -180,13 +177,16 @@ object Composables {
                             }
                         },
                         modifier = Modifier
-                            .padding(end = 8.dp, bottom = 16.dp)
-                            .height(50.dp)
+                            .padding(
+                                end = dimensionResource(R.dimen.padding_extra_small),
+                                bottom = dimensionResource(R.dimen.padding)
+                            )
+                            .height(dimensionResource(R.dimen.fab_height))
                     ) {
                         Text(
                             text = "Next >",
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            fontSize = FontSizes.Medium.sp,
+                            modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.padding))
                         )
                     }
                 }
@@ -210,17 +210,23 @@ object Composables {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Header(text = "Please select a pair of countries")
+            Header(text = stringResource(id = R.string.main_screen_header_text))
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 if (data.isNotEmpty()) {
                     LazyColumn(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        contentPadding = PaddingValues(top = 15.dp, bottom = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        contentPadding = PaddingValues(
+                            top = dimensionResource(id = R.dimen.content_padding),
+                            bottom = dimensionResource(id = R.dimen.padding_small)
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacer_padding)),
                         state = lazyListState,
                         modifier = Modifier
                             .fillMaxSize()
-                            .simpleVerticalScrollbar(state = lazyListState, 4.dp)
+                            .simpleVerticalScrollbar(
+                                state = lazyListState,
+                                dimensionResource(id = R.dimen.scroll_bar_width)
+                            )
                     ) {
                         items(data) { listData ->
                             CountryView(listData, selectedCountries)
@@ -241,7 +247,7 @@ object Composables {
         Text(
             text = countryName,
             textAlign = TextAlign.Center,
-            fontSize = TextUnit(16f, TextUnitType.Sp),
+            fontSize = FontSizes.Medium.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             color = if (isSelected) Color.Magenta else Color.Black,
             modifier = Modifier.clickable {
@@ -292,18 +298,35 @@ object Composables {
             navController.popBackStack()
             viewModel.resetStates()
         }
+
+        val lazyListState = rememberLazyListState()
         Scaffold(
             content = {
                 Column {
-                    Header(text = "$country1 & $country2's holidays")
+                    Header(
+                        text = stringResource(
+                            R.string.ops_screen_header_text, "$country1", "$country2"
+                        )
+                    )
                     OpsRadioGroup(viewModel, country1, country2)
-                    Divider(thickness = 1.dp)
+                    Divider(thickness = dimensionResource(R.dimen.line))
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         if (holidays.isNotEmpty()) {
                             LazyColumn(
-                                contentPadding = PaddingValues(top = 15.dp, bottom = 10.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier.fillMaxSize()
+                                contentPadding = PaddingValues(
+                                    top = dimensionResource(R.dimen.content_padding),
+                                    bottom = dimensionResource(R.dimen.padding_small)
+                                ),
+                                verticalArrangement = Arrangement.spacedBy(
+                                    dimensionResource(id = R.dimen.spacer_padding_large)
+                                ),
+                                state = lazyListState,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .simpleVerticalScrollbar(
+                                        state = lazyListState,
+                                        dimensionResource(id = R.dimen.scroll_bar_width)
+                                    )
                             ) {
                                 items(holidays) {
                                     HolidayView(name = it.name, date = it.date)
@@ -377,7 +400,7 @@ object Composables {
             RadioButton(
                 selected = selected,
                 onClick = onClick,
-                modifier = Modifier.padding(end = 5.dp)
+                modifier = Modifier.padding(end = dimensionResource(id = R.dimen.radio_btn_padding))
             )
             Text(text = text)
         }
@@ -386,10 +409,16 @@ object Composables {
     @Composable
     fun HolidayView(name: String, date: String) {
         Column(
-            Modifier.padding(start = 12.dp)
+            Modifier.padding(start = dimensionResource(R.dimen.padding_medium))
         ) {
-            Text(text = name, fontSize = 14.sp)
-            Text(text = date, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+            Text(text = name, fontSize = FontSizes.Regular.sp)
+            Text(
+                text = date, fontSize = FontSizes.Small.sp, modifier = Modifier.padding(
+                    top = dimensionResource(
+                        id = R.dimen.spacer_padding
+                    )
+                )
+            )
         }
     }
 
@@ -398,11 +427,15 @@ object Composables {
         Column {
             Text(
                 text = text,
-                fontSize = TextUnit(20f, TextUnitType.Sp),
+                fontSize = FontSizes.Header.sp,
                 color = Color.Black,
-                modifier = Modifier.padding(start = 12.dp, top = 16.dp, bottom = 10.dp)
+                modifier = Modifier.padding(
+                    start = dimensionResource(R.dimen.padding_medium),
+                    top = dimensionResource(R.dimen.padding),
+                    bottom = dimensionResource(R.dimen.padding_small)
+                )
             )
-            Divider(thickness = 1.dp)
+            Divider(thickness = dimensionResource(id = R.dimen.line))
         }
     }
 
@@ -411,7 +444,7 @@ object Composables {
      */
     private fun Modifier.simpleVerticalScrollbar(
         state: LazyListState,
-        width: Dp = 8.dp
+        width: Dp
     ): Modifier = composed {
         val targetAlpha = if (state.isScrollInProgress) 1f else 0f
         val duration = if (state.isScrollInProgress) 150 else 500

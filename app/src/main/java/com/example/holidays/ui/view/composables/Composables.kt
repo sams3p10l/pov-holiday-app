@@ -9,6 +9,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
@@ -180,6 +182,63 @@ object Composables {
     }
 
     @Composable
+    fun Recycler(viewModel: MainScreenViewModel, selectedCountries: MutableList<String>) {
+        val dataState = viewModel.countriesBindings.collectAsState()
+        val data = dataState.value
+        val lazyListState = rememberLazyListState()
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Header(text = "Please select a pair of countries")
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                if (data.isNotEmpty()) {
+                    LazyColumn(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        contentPadding = PaddingValues(top = 15.dp, bottom = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        state = lazyListState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .simpleVerticalScrollbar(state = lazyListState, 4.dp)
+                    ) {
+                        items(data) { listData ->
+                            CountryView(listData, selectedCountries)
+                        }
+                    }
+                } else {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun CountryView(countryName: String, selectedCountries: MutableList<String>) {
+        val isSelected = selectedCountries.contains(countryName)
+
+        Text(
+            text = countryName,
+            textAlign = TextAlign.Center,
+            fontSize = TextUnit(16f, TextUnitType.Sp),
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = if (isSelected) Color.Magenta else Color.Black,
+            modifier = Modifier.clickable {
+                if (isSelected) {
+                    selectedCountries.remove(countryName)
+                } else {
+                    if (selectedCountries.size >= 2) {
+                        selectedCountries.removeAt(0)
+                    }
+                    selectedCountries.add(countryName)
+                }
+            }
+        )
+    }
+
+    @Composable
     fun OperationsScreen(
         navController: NavController,
         viewModel: OperationsScreenViewModel,
@@ -207,10 +266,20 @@ object Composables {
         Column {
             Header(text = "$country1 & $country2's holidays")
             OpsRadioGroup(viewModel, country1, country2)
-            Spacer(Modifier.height(20.dp))
-            LazyColumn {
-                items(holidays) {
-                    HolidayView(name = it.name, date = it.date.toString())
+            Divider(thickness = 1.dp)
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                if (holidays.isNotEmpty()) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(top = 15.dp, bottom = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(holidays) {
+                            HolidayView(name = it.name, date = it.date)
+                        }
+                    }
+                } else {
+                    CircularProgressIndicator()
                 }
             }
         }
@@ -269,57 +338,12 @@ object Composables {
 
     @Composable
     fun HolidayView(name: String, date: String) {
-        Column {
+        Column(
+            Modifier.padding(start = 12.dp)
+        ) {
             Text(text = name, fontSize = 14.sp)
-            Text(text = date, fontSize = 10.sp)
+            Text(text = date, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
         }
-    }
-
-    @Composable
-    fun Recycler(viewModel: MainScreenViewModel, selectedCountries: MutableList<String>) {
-        val dataState = viewModel.countriesBindings.collectAsState()
-        val data = dataState.value
-        val lazyListState = rememberLazyListState()
-
-        Column {
-            Header(text = "Please select a pair of countries")
-            LazyColumn(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                contentPadding = PaddingValues(top = 15.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-                state = lazyListState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .simpleVerticalScrollbar(state = lazyListState, 4.dp)
-            ) {
-                items(data) { listData ->
-                    CountryView(listData, selectedCountries)
-                }
-            }
-        }
-    }
-
-    @Composable
-    fun CountryView(countryName: String, selectedCountries: MutableList<String>) {
-        val isSelected = selectedCountries.contains(countryName)
-
-        Text(
-            text = countryName,
-            textAlign = TextAlign.Center,
-            fontSize = TextUnit(16f, TextUnitType.Sp),
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color.Magenta else Color.Black,
-            modifier = Modifier.clickable {
-                if (isSelected) {
-                    selectedCountries.remove(countryName)
-                } else {
-                    if (selectedCountries.size >= 2) {
-                        selectedCountries.removeAt(0)
-                    }
-                    selectedCountries.add(countryName)
-                }
-            }
-        )
     }
 
     @Composable

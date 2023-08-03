@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,6 +28,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,14 +39,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import com.example.holidays.ui.view.theme.PurpleGrey40
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,13 +70,15 @@ import androidx.navigation.navArgument
 import com.example.holidays.ui.view.theme.HolidaysTheme
 import com.example.holidays.ui.viewmodel.MainScreenViewModel
 import com.example.holidays.ui.viewmodel.OperationsScreenViewModel
-import com.example.holidays.util.Operations
-import com.example.holidays.util.Screen.MainScreen
-import com.example.holidays.util.Screen.OpsScreen
-import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY1
-import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY1_CODE
-import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY2
-import com.example.holidays.util.Screen.OpsScreen.ARG_COUNTRY2_CODE
+import com.example.holidays.util.enums.Operations
+import com.example.holidays.util.enums.Screen.MainScreen
+import com.example.holidays.util.enums.Screen.OpsScreen
+import com.example.holidays.util.enums.Screen.OpsScreen.ARG_COUNTRY1
+import com.example.holidays.util.enums.Screen.OpsScreen.ARG_COUNTRY1_CODE
+import com.example.holidays.util.enums.Screen.OpsScreen.ARG_COUNTRY2
+import com.example.holidays.util.enums.Screen.OpsScreen.ARG_COUNTRY2_CODE
+import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalUnitApi::class)
 object Composables {
@@ -132,13 +139,20 @@ object Composables {
         navController: NavController,
         viewModel: MainScreenViewModel
     ) {
+        val errorState = viewModel.errorState.collectAsState(null)
+        val error = errorState.value?.let { return@let stringResource(id = it) }
+        val snackState = remember { SnackbarHostState() }
+        error?.let {
+            LaunchSnackBar(snackState, it)
+        }
+
         val selectedCountries = remember { mutableStateListOf<String>() }
         var isFabEnabled by remember { mutableStateOf(false) }
-
         isFabEnabled = selectedCountries.size == 2
 
         Scaffold(
-            content = { Recycler(viewModel, selectedCountries) },
+            snackbarHost = { SnackbarHost(hostState = snackState) },
+            content = { Recycler(viewModel, selectedCountries, error) },
             floatingActionButton = {
                 AnimatedVisibility(
                     visible = isFabEnabled,
@@ -182,7 +196,11 @@ object Composables {
     }
 
     @Composable
-    fun Recycler(viewModel: MainScreenViewModel, selectedCountries: MutableList<String>) {
+    fun Recycler(
+        viewModel: MainScreenViewModel,
+        selectedCountries: MutableList<String>,
+        error: String?
+    ) {
         val dataState = viewModel.countriesBindings.collectAsState()
         val data = dataState.value
         val lazyListState = rememberLazyListState()
@@ -209,7 +227,8 @@ object Composables {
                         }
                     }
                 } else {
-                    CircularProgressIndicator()
+                    val alpha = if (error != null) 0f else 1f
+                    CircularProgressIndicator(Modifier.alpha(alpha))
                 }
             }
         }
@@ -238,6 +257,8 @@ object Composables {
         )
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @Composable
     fun OperationsScreen(
         navController: NavController,
@@ -247,12 +268,20 @@ object Composables {
         country1Code: String?,
         country2Code: String?
     ) {
+        val errorState = viewModel.errorState.collectAsState(null)
+        val error = errorState.value?.let { return@let stringResource(id = it) }
+        val snackState = remember { SnackbarHostState() }
+
+        error?.let {
+            LaunchSnackBar(snackState, it)
+        }
+
         /**
          * Parameters are specified as nullable because NavBackStackEntry arguments bundle is nullable by default
          * In reality, params are not-null, as specified in NavigationHost
          * Because of that it's safe to use double bangs (!!)
          */
-        LaunchedEffect(key1 = null) {
+        LaunchedEffect(Unit) {
             viewModel.fetchHolidays(country1Code!!, country2Code!!)
         }
 
@@ -261,26 +290,44 @@ object Composables {
 
         BackHandler(enabled = true) {
             navController.popBackStack()
-            viewModel.resetHolidays()
+            viewModel.resetStates()
         }
-        Column {
-            Header(text = "$country1 & $country2's holidays")
-            OpsRadioGroup(viewModel, country1, country2)
-            Divider(thickness = 1.dp)
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                if (holidays.isNotEmpty()) {
-                    LazyColumn(
-                        contentPadding = PaddingValues(top = 15.dp, bottom = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(holidays) {
-                            HolidayView(name = it.name, date = it.date)
+        Scaffold(
+            content = {
+                Column {
+                    Header(text = "$country1 & $country2's holidays")
+                    OpsRadioGroup(viewModel, country1, country2)
+                    Divider(thickness = 1.dp)
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        if (holidays.isNotEmpty()) {
+                            LazyColumn(
+                                contentPadding = PaddingValues(top = 15.dp, bottom = 10.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(holidays) {
+                                    HolidayView(name = it.name, date = it.date)
+                                }
+                            }
+                        } else {
+                            val alpha = if (error != null) 0f else 1f
+                            CircularProgressIndicator(Modifier.alpha(alpha))
                         }
                     }
-                } else {
-                    CircularProgressIndicator()
                 }
+            },
+            snackbarHost = { SnackbarHost(hostState = snackState) }
+        )
+    }
+
+    @Composable
+    private fun LaunchSnackBar(snackState: SnackbarHostState, text: String) {
+        val snackScope = rememberCoroutineScope()
+        val currentMessage by rememberUpdatedState(newValue = text)
+
+        LaunchedEffect(currentMessage) {
+            snackScope.launch {
+                snackState.showSnackbar(text)
             }
         }
     }

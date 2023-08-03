@@ -1,4 +1,4 @@
-package com.example.holidays.di
+package com.example.holidays.data.di
 
 import com.example.holidays.util.CustomInterceptor
 import dagger.Module

@@ -1,4 +1,4 @@
-package com.example.holidays.util
+package com.example.holidays.util.enums
 
 import androidx.annotation.StringRes
 import com.example.holidays.R
@@ -10,9 +10,10 @@ enum class Status(val value: Int, @StringRes val message: Int) {
     ERROR_PAYMENT(402, R.string.status_error_payment),
     ERROR_INSECURE(403, R.string.status_error_insecure),
     ERROR_LIMIT(429, R.string.status_error_monthly_limit),
-    ERROR_SERVER(500, R.string.status_error_server);
+    ERROR_SERVER(500, R.string.status_error_server),
+    ERROR_GENERAL(0, R.string.general_error);
 
     companion object {
-        fun byStatusCode(code: Int): Status? = values().find { it.value == code }
+        fun byStatusCode(code: Int): Status = values().find { it.value == code } ?: ERROR_GENERAL
     }
 }

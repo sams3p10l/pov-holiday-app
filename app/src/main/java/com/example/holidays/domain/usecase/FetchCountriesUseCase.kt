@@ -2,7 +2,7 @@ package com.example.holidays.domain.usecase
 
 import com.example.holidays.data.repository.HolidaysRepo
 import com.example.holidays.domain.model.AvailableCountry
-import com.example.holidays.util.Status
+import com.example.holidays.util.enums.Status
 import javax.inject.Inject
 
 class FetchCountriesUseCaseImpl @Inject constructor(

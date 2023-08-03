@@ -1,4 +1,4 @@
-package com.example.holidays.util
+package com.example.holidays.util.enums
 
 sealed class Operations(val text: String) {
     object None: Operations( "")

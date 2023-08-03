@@ -1,4 +1,4 @@
-package com.example.holidays.util
+package com.example.holidays.util.enums
 
 sealed class Screen(val route: String) {
     object MainScreen : Screen("main_screen")

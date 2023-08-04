@@ -1,4 +1,4 @@
-package com.example.holidays.ui.view.composables
+package com.example.holidays.presentation.view.composables
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
@@ -52,12 +52,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import com.example.holidays.ui.view.theme.PurpleGrey40
+import com.example.holidays.presentation.view.theme.PurpleGrey40
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -65,9 +64,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.holidays.R
-import com.example.holidays.ui.view.theme.HolidaysTheme
-import com.example.holidays.ui.viewmodel.MainScreenViewModel
-import com.example.holidays.ui.viewmodel.OperationsScreenViewModel
+import com.example.holidays.presentation.view.theme.HolidaysTheme
+import com.example.holidays.presentation.viewmodel.MainScreenViewModel
+import com.example.holidays.presentation.viewmodel.OperationsScreenViewModel
 import com.example.holidays.util.enums.FontSizes
 import com.example.holidays.util.enums.Operations
 import com.example.holidays.util.enums.Screen.MainScreen

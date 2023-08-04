@@ -1,11 +1,15 @@
-package com.example.holidays.ui.viewmodel
+package com.example.holidays.presentation.viewmodel
 
 import android.util.Log
+import androidx.annotation.VisibleForTesting
+import androidx.core.util.toAndroidXPair
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.holidays.domain.model.AvailableCountry
 import com.example.holidays.domain.usecase.FetchCountriesUseCase
+import com.example.holidays.util.ContextProvider
+import com.example.holidays.util.CoroutineContextProvider
 import com.example.holidays.util.enums.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -20,7 +24,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val countriesUseCase: FetchCountriesUseCase
+    private val countriesUseCase: FetchCountriesUseCase,
+    private val contextProvider: ContextProvider
 ) : ViewModel() {
 
     val countriesBindings =
@@ -41,14 +46,15 @@ class MainScreenViewModel @Inject constructor(
 
     private fun getCountries() {
         viewModelScope.launch(errorHandler) {
-            val countriesResponse: Pair<Status?, List<AvailableCountry>>
+            val countriesResponse: List<AvailableCountry>
 
-            withContext(Dispatchers.IO) {
-                countriesResponse = countriesUseCase.execute()
+            withContext(contextProvider.IO) {
+                countriesResponse = countriesUseCase.execute().also {
+                    countriesData = it
+                }
             }
-            countriesData = countriesResponse.second
 
-            val bindings = countriesResponse.second.map { it.name }
+            val bindings = countriesResponse.map { it.name }
             savedStateHandle[KEY_COUNTRIES] = bindings
         }
     }
@@ -59,15 +65,15 @@ class MainScreenViewModel @Inject constructor(
 
     private fun initExceptionHandler() {
         errorHandler = CoroutineExceptionHandler { _, throwable ->
-            Log.e(this::class.simpleName, ": ", throwable)
+            viewModelScope.launch {
+                when (throwable) {
+                    is HttpException -> {
+                        _errorState.emit(Status.byStatusCode(throwable.code()).message)
+                    }
 
-            when (throwable) {
-                is HttpException -> {
-                    _errorState.tryEmit(Status.byStatusCode(throwable.code()).message)
-                }
-
-                else -> {
-                    _errorState.tryEmit(Status.ERROR_GENERAL.message)
+                    else -> {
+                        _errorState.emit(Status.ERROR_GENERAL.message)
+                    }
                 }
             }
         }

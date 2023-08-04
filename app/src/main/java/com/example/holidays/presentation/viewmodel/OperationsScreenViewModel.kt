@@ -1,18 +1,18 @@
-package com.example.holidays.ui.viewmodel
+package com.example.holidays.presentation.viewmodel
 
-import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.holidays.domain.model.PublicHoliday
 import com.example.holidays.domain.usecase.FetchPublicHolidaysUseCase
-import com.example.holidays.ui.behavior.FilterBehavior
-import com.example.holidays.ui.behavior.FilterBehaviorImpl
+import com.example.holidays.presentation.behavior.FilterBehavior
+import com.example.holidays.presentation.behavior.FilterBehaviorImpl
+import com.example.holidays.util.ContextProvider
 import com.example.holidays.util.enums.Operations
 import com.example.holidays.util.enums.Status
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -24,7 +24,8 @@ import javax.inject.Inject
 @HiltViewModel
 class OperationsScreenViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val holidaysUseCase: FetchPublicHolidaysUseCase
+    private val holidaysUseCase: FetchPublicHolidaysUseCase,
+    private val contextProvider: ContextProvider
 ) : ViewModel() {
 
     val holidays = savedStateHandle.getStateFlow(KEY_FILTERED_HOLIDAYS, listOf<PublicHoliday>())
@@ -32,16 +33,18 @@ class OperationsScreenViewModel @Inject constructor(
     private val _errorState: MutableSharedFlow<Int?> = MutableSharedFlow()
     val errorState = _errorState.asSharedFlow()
 
-    private var holidaysPair: Pair<Set<PublicHoliday>, Set<PublicHoliday>>? = null
+    @VisibleForTesting
+    var holidaysPair: Pair<Set<PublicHoliday>, Set<PublicHoliday>>? = null
+
     private var filterBehavior: FilterBehavior? = null
 
     fun fetchHolidays(firstCountryCode: String, secondCountryCode: String) {
         viewModelScope.launch(errorHandler) {
-            withContext(Dispatchers.IO) {
+            withContext(contextProvider.IO) {
                 val firstCountryHolidays =
-                    async { holidaysUseCase.execute(null, firstCountryCode) }.await().second
+                    async { holidaysUseCase.execute(null, firstCountryCode) }.await()
                 val secondCountryHolidays =
-                    async { holidaysUseCase.execute(null, secondCountryCode) }.await().second
+                    async { holidaysUseCase.execute(null, secondCountryCode) }.await()
 
                 holidaysPair = Pair(firstCountryHolidays, secondCountryHolidays)
 
@@ -64,8 +67,6 @@ class OperationsScreenViewModel @Inject constructor(
     }
 
     private val errorHandler = CoroutineExceptionHandler { _, throwable ->
-        Log.e(this::class.simpleName, ": ", throwable)
-
         viewModelScope.launch {
             when (throwable) {
                 is HttpException -> {

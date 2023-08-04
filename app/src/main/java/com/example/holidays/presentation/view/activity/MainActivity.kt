@@ -1,12 +1,12 @@
-package com.example.holidays.ui.view.activity
+package com.example.holidays.presentation.view.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import com.example.holidays.ui.view.composables.Composables
-import com.example.holidays.ui.viewmodel.MainScreenViewModel
-import com.example.holidays.ui.viewmodel.OperationsScreenViewModel
+import com.example.holidays.presentation.view.composables.Composables
+import com.example.holidays.presentation.viewmodel.MainScreenViewModel
+import com.example.holidays.presentation.viewmodel.OperationsScreenViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

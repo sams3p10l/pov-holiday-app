@@ -1,4 +1,4 @@
-package com.example.holidays.ui.view.theme
+package com.example.holidays.presentation.view.theme
 
 import android.app.Activity
 import android.os.Build

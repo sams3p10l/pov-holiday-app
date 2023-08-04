@@ -8,11 +8,11 @@ import javax.inject.Inject
 
 class FetchPublicHolidaysUseCaseImpl @Inject constructor(
     private val repo: HolidaysRepo
-): FetchPublicHolidaysUseCase {
-    override suspend fun execute(year: Int?, countryCode: String): Pair<Int, Set<PublicHoliday>> {
+) : FetchPublicHolidaysUseCase {
+    override suspend fun execute(year: Int?, countryCode: String): Set<PublicHoliday> {
         val response = repo.fetchHolidaysByYear(year ?: DEFAULT_YEAR, countryCode)
 
-        return response.status to response.holidays.map {
+        return response.holidays.map {
             PublicHoliday(
                 it.name,
                 LocalDate.parse(it.date).format(DateTimeFormatter.ofPattern(DATE_FORMAT))
@@ -27,5 +27,5 @@ class FetchPublicHolidaysUseCaseImpl @Inject constructor(
 }
 
 fun interface FetchPublicHolidaysUseCase {
-    suspend fun execute(year: Int?, countryCode: String): Pair<Int, Set<PublicHoliday>>
+    suspend fun execute(year: Int?, countryCode: String): Set<PublicHoliday>
 }

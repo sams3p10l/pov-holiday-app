@@ -8,10 +8,10 @@ import javax.inject.Inject
 class FetchCountriesUseCaseImpl @Inject constructor(
     private val repo: HolidaysRepo
 ): FetchCountriesUseCase {
-    override suspend fun execute(): Pair<Status?, List<AvailableCountry>> {
+    override suspend fun execute(): List<AvailableCountry> {
         val response = repo.fetchCountries()
 
-        return Status.byStatusCode(response.status) to response.countries.map {
+        return response.countries.map {
             AvailableCountry(
                 it.name,
                 it.codes.alpha2
@@ -21,5 +21,5 @@ class FetchCountriesUseCaseImpl @Inject constructor(
 }
 
 fun interface FetchCountriesUseCase {
-    suspend fun execute(): Pair<Status?, List<AvailableCountry>>
+    suspend fun execute(): List<AvailableCountry>
 }

@@ -1,4 +1,4 @@
-package com.example.holidays.ui.behavior
+package com.example.holidays.presentation.behavior
 
 import com.example.holidays.domain.model.PublicHoliday
 

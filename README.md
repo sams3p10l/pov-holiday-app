@@ -1,6 +1,6 @@
 # Holidays Android App - Proof-of-Value Project
 
-The Holidays Android app is a proof-of-value project that allows users to perform various operations on a dataset of different countries' public holidays. The app follows the Clean-MVVM architecture with a Single Activity approach. It consists of two fragments - one displaying a list of countries and another where users can choose and perform operations on a pair of selected countries.
+The Holidays Android app is a proof-of-value project that allows users to perform various operations on a dataset of different countries' public holidays. The app follows the Clean-MVVM architecture with a Single Activity approach. It consists of two screen composables - one displaying a list of countries and another where users can choose and perform operations on a pair of selected countries.
 
 ## Features
 

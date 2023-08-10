@@ -6,46 +6,18 @@ The Holidays Android app is a proof-of-value project that allows users to perfor
 
 - Clean-MVVM architecture
 - Single Activity approach
-- Fragments: 
+- Screens: 
   1. Country List
   2. Operation Selection
-- UI written in XML (with plans to migrate to Compose if time permits)
-- No database (with plans to implement Room database if time permits)
 
 ## Dependencies
 
 The app uses the following key dependencies:
 
+- Compose UI
 - Hilt for dependency injection
 - Coroutines for asynchronous operations
-- java.time for date/time handling
 - Moshi for JSON serialization
-
-## Progress Estimate
-
-The development process is divided into five days, with each day targeting specific tasks:
-
-### Day 1
-- Set up project structure and architecture
-- Define dependencies and implement dependency injection with Hilt
-- Create base classes and functionality
-- Design and implement a simple XML-based UI
-
-### Day 2
-- Implement business rules and logic
-- Create ViewModel and connect it to the UI
-
-### Day 3
-- Finalize XML-based UI and connect it to the underlying layers
-- Implement core functionality for performing operations on holidays
-
-### Day 4
-- If Day 3 tasks are complete, migrate UI to Compose
-- Otherwise, fill any remaining gaps in the functionality
-
-### Day 5
-- If both base functionality and Compose UI are complete, add Room database integration
-- Otherwise, address any remaining gaps in the implementation
 
 ## Getting Started
 
